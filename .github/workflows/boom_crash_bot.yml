@@ -1,0 +1,43 @@
+name: Boom & Crash Bot — Signal Scanner
+
+on:
+  schedule:
+    # 6 runs/jour espacés toutes les 4h, décalés de 5min après la clôture
+    # pour capturer H4 ET les clôtures H1 intermédiaires
+    # Heure UTC : 00:05 / 04:05 / 08:05 / 12:05 / 16:05 / 20:05
+    - cron: "5 0 * * *"
+    - cron: "5 4 * * *"
+    - cron: "5 8 * * *"
+    - cron: "5 12 * * *"
+    - cron: "5 16 * * *"
+    - cron: "5 20 * * *"
+
+  # Permet aussi un déclenchement manuel depuis l'interface GitHub
+  workflow_dispatch:
+
+jobs:
+  scan:
+    name: Analyse multi-timeframe Boom & Crash
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout du dépôt
+        uses: actions/checkout@v4
+
+      - name: Setup Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Installation des dépendances
+        run: pip install -r requirements.txt
+
+      - name: Lancement du bot
+        env:
+          DERIV_API_TOKEN: ${{ secrets.DERIV_API_TOKEN }}
+          DERIV_APP_ID: ${{ secrets.DERIV_APP_ID }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: python src/main.py
